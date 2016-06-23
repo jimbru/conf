@@ -1,4 +1,4 @@
-(ns clams.conf
+(ns conf.core
   "Provides app configuration. Clams app configuration is read from EDN files
   compiled into resources, environment variables, and Java system properties.
   This namespace contains both the infrastructure for loading these values
@@ -51,7 +51,7 @@
   "Normalizes a config var map."
   [vmap]
   (into {} (for [[k v] vmap]
-    [(normalize-var-name k) v])))
+             [(normalize-var-name k) v])))
 
 (defn- sys-getenv
   "Wrapper around System/getenv. Makes it easier to mock in tests."
@@ -125,7 +125,7 @@
   "Returns the config value for the given key. If a not-found argument is
   passed, that will be returned if no value is found, otherwise nil."
   ([k]
-    (get k nil))
+   (get k nil))
   ([k not-found]
    (core-get (get-all) k not-found)))
 

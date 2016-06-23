@@ -1,30 +1,25 @@
-(ns clams.test.conf-test
+(ns conf.core-test
   (:require [clojure.test :refer :all]
-            [clams.conf :as conf]))
+            [conf.core :as conf]))
 
 (def mock-conf-base-edn
-  "{
-     :port 5000
-   }")
+  "{:port 5000
+    }")
 
 (def mock-conf-default-edn
-  "{
-     :database-url \"sql://fake:1234/foobar\"
-     :log-level :debug ;; verbose!
-   }")
+  "{:database-url \"sql://fake:1234/foobar\"
+    :log-level :debug ; verbose!
+    }")
 
 (def mock-conf-dev-edn
-  "{
-     :database-url \"sql://fake:1234/devdb\"
-   }")
+  "{:database-url \"sql://fake:1234/devdb\"
+    }")
 
 (def mock-conf-prod-edn
-  "{
-     :database-url \"sql://fake:1234/proddb\"
-   }")
+  "{:database-url \"sql://fake:1234/proddb\"
+    }")
 
-(defn stub-slurp
-  [file]
+(defn stub-slurp [file]
   (condp = file
     "conf/prod.edn"    mock-conf-prod-edn
     "conf/dev.edn"     mock-conf-dev-edn
@@ -32,17 +27,16 @@
     "conf/base.edn"    mock-conf-base-edn
     (throw (Exception. "Unknown fixture."))))
 
-(defn wrap-fixtures
-  [props env f]
-  (with-redefs [clojure.java.io/resource     identity
-                clojure.core/slurp           stub-slurp
-                clams.conf/sys-getenv        (fn [] env)
-                clams.conf/sys-getproperties (fn [] props)]
+(defn wrap-fixtures [props env f]
+  (with-redefs [clojure.java.io/resource    identity
+                clojure.core/slurp          stub-slurp
+                conf.core/sys-getenv        (fn [] env)
+                conf.core/sys-getproperties (fn [] props)]
     (f)))
 
 (use-fixtures :each (fn [f]
-  (f)
-  (conf/unload!)))
+                      (f)
+                      (conf/unload!)))
 
 (deftest file-not-found-test
   (with-redefs [clojure.java.io/resource (fn [_] nil)]
@@ -50,7 +44,7 @@
     (is (= (conf/get :log-level) nil))))
 
 (deftest get-from-base-test
-  (conf/load!)
+  (wrap-fixtures {} {} conf/load!)
   (is (= (conf/get :port) 5000)))
 
 (deftest get-from-default-test
@@ -100,6 +94,7 @@
           :baz          "quux"})))
 
 (deftest set!-test
+  (wrap-fixtures {} {} conf/load!)
   (is (= (conf/get :port) 5000))
   (is (= (conf/get :color) nil))
   (conf/set! :color "red")
