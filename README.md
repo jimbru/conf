@@ -1,5 +1,7 @@
 # conf
 
+[![Build Status](https://travis-ci.org/jimbru/conf.svg?branch=master)](https://travis-ci.org/jimbru/conf)
+
 A simple environment configuration library for Clojure.
 
 ## Usage
