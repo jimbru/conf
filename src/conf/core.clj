@@ -1,21 +1,19 @@
 (ns conf.core
-  "Provides app configuration. Clams app configuration is read from EDN files
-  compiled into resources, environment variables, and Java system properties.
-  This namespace contains both the infrastructure for loading these values
-  and accessing them at run-time.
+  "Library to read configuration values from edn resources, environment
+  variables, and Java system properties.
 
-  Clams provides a sane configuration out-of-the-box in its base config file.
-  This should be sufficient for the simplest apps. An app may override these
-  settings and add custom values by creating an additional config file at
-  `/resources/conf/default.edn`.
+  Basic config values will be loaded from `/resources/conf/base.edn`.
 
-  Apps may also add environment-specific config files. These are selectable at
-  run-time by setting the special environment variable `CLAMS_ENV` (or the Java
-  property `clams.env`). These config values are merged on top of, and take
-  precedence over, the default and base configs. For example, to activate a
-  production-specific configuration, one might run the command:
-  `CLAMS_ENV=prod lein run`. The value of `CLAMS_ENV` can be an arbitrary
-  string; the value of that string determines which config is loaded.
+  Different configurations may be specified for different 'environments'.
+  The current environment is determined by the special environment variable
+  `CLAMS_ENV` (or the Java property `clams.env`). The value of this variable
+  determines the name of an additional edn resource to load. Values set in
+  this file will take precedence over those set in the base config. For example,
+  to run a program in a production configuration, you might run the command:
+  `CLAMS_ENV=prod lein run`. This would load both the base config file and
+  `/resources/conf/prod.edn`, with the latter taking precedence. Note that the
+  value of `CLAMS_ENV` can be an arbitrary string; you can name the
+  environment-specific config resources however you like.
 
   Environment variables are also merged into the config. These take a higher
   precedence and can override any file's value. Names of environment variables
@@ -25,8 +23,7 @@
   Finally, Java system properties are also merged into the config. These take
   the highest precedence of all, and can override any other config value.
   Property names are normalized from lower.dot.case to the typical
-  lower-dash-case, just like environment variables.
-  "
+  lower-dash-case, just like environment variables."
   (:refer-clojure :rename {get core-get set! core-set!})
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
@@ -80,7 +77,7 @@
   (when name
     (let [resource (io/resource (format "conf/%s.edn" name))]
       (if (nil? resource)
-        {}  ;; Config file not found.
+        {}  ; Config file not found.
         (edn/read-string (slurp resource))))))
 
 (defn- get-clams-env
@@ -91,7 +88,7 @@
     (string/lower-case clams-env)))
 
 (defn load!
-  "Loads the app config. Usually you won't need to call this directly as
+  "Loads the config. Usually you won't need to call this directly as
   the config will be automatically loaded when you attempt to access it."
   []
   (let [props     (read-props)
@@ -104,7 +101,7 @@
                         props))))
 
 (defn unload!
-  "Unloads the app config. This exists mainly to ease testing
+  "Unloads the config. This exists mainly to ease testing
   and should very rarely, if ever, be called in your app."
   []
   (reset! conf nil))
@@ -133,5 +130,6 @@
   "Sets the config value for the given key. This is useful when
    debugging in the repl."
   [k val]
-  (get-all)                             ; For the side effect
+  (when-not (loaded?)
+    (load!))
   (swap! conf assoc k val))
