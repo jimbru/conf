@@ -1,15 +1,15 @@
 # conf
 
 [![Build Status](https://travis-ci.org/jimbru/conf.svg?branch=master)](https://travis-ci.org/jimbru/conf)
+[![Clojars Project](https://img.shields.io/clojars/v/conf.svg)](https://clojars.org/conf)
 
 A simple environment configuration library for Clojure.
 
 ## Installation
 
 Add the following dependency to your `project.clj` file:
-```clojure
-[conf "0.1.0-SNAPSHOT"]
-```
+
+[![Clojars Project](http://clojars.org/conf/latest-version.svg)](http://clojars.org/conf)
 
 ## Usage
 
