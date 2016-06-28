@@ -52,17 +52,17 @@
   (is (= (conf/get :database-url) "sql://fake:1234/foobar"))
   (is (= (conf/get :log-level) :debug)))
 
-(deftest get-from-clams-env-test
+(deftest get-from-conf-env-test
   (testing "dev"
-    (wrap-fixtures {} {"CLAMS_ENV" "dev"} conf/load!)
+    (wrap-fixtures {} {"CONF_ENV" "dev"} conf/load!)
     (is (= (conf/get :database-url) "sql://fake:1234/devdb"))
     (conf/unload!))
   (testing "prod"
-    (wrap-fixtures {} {"clams.env" "PrOd"} conf/load!)
+    (wrap-fixtures {} {"conf.env" "PrOd"} conf/load!)
     (is (= (conf/get :database-url) "sql://fake:1234/proddb"))
     (conf/unload!))
   (testing "using system property"
-    (wrap-fixtures {"clams.env" "dev"} {} conf/load!)
+    (wrap-fixtures {"conf.env" "dev"} {} conf/load!)
     (is (= (conf/get :database-url) "sql://fake:1234/devdb"))
     (conf/unload!)))
 

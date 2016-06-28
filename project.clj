@@ -1,4 +1,4 @@
-(defproject conf "0.9.0"
+(defproject conf "0.9.1-SNAPSHOT"
   :description "Simple configuration/environment library for Clojure."
   :url "https://github.com/jimbru/conf"
   :license {:name "MIT License"

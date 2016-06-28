@@ -6,13 +6,13 @@
 
   Different configurations may be specified for different 'environments'.
   The current environment is determined by the special environment variable
-  `CLAMS_ENV` (or the Java property `clams.env`). The value of this variable
+  `CONF_ENV` (or the Java property `conf.env`). The value of this variable
   determines the name of an additional edn resource to load. Values set in
   this file will take precedence over those set in the base config. For example,
   to run a program in a production configuration, you might run the command:
-  `CLAMS_ENV=prod lein run`. This would load both the base config file and
+  `CONF_ENV=prod lein run`. This would load both the base config file and
   `/resources/conf/prod.edn`, with the latter taking precedence. Note that the
-  value of `CLAMS_ENV` can be an arbitrary string; you can name the
+  value of `CONF_ENV` can be an arbitrary string; you can name the
   environment-specific config resources however you like.
 
   Environment variables are also merged into the config. These take a higher
@@ -80,12 +80,12 @@
         {}  ; Config file not found.
         (edn/read-string (slurp resource))))))
 
-(defn- get-clams-env
-  "Parses the special CLAMS_ENV var from config maps. The value of
+(defn- get-conf-env
+  "Parses the special CONF_ENV var from config maps. The value of
   this var informs which additional config files should be loaded."
   [& cfgs]
-  (when-let [clams-env (some identity (map :clams-env cfgs))]
-    (string/lower-case clams-env)))
+  (when-let [conf-env (some identity (map :conf-env cfgs))]
+    (string/lower-case conf-env)))
 
 (defn load!
   "Loads the config. Usually you won't need to call this directly as
@@ -93,10 +93,10 @@
   []
   (let [props     (read-props)
         env       (read-env)
-        clams-env (get-clams-env props env)]
+        conf-env (get-conf-env props env)]
     (reset! conf (merge (read-config-file "base")
                         (read-config-file "default")
-                        (read-config-file clams-env)
+                        (read-config-file conf-env)
                         env
                         props))))
 

@@ -50,7 +50,7 @@ Add the following dependency to your `project.clj` file:
 
     To use just the base config, run your app normally, e.g. `lein run`. If
     you'd like to enable an environment-specific config, be sure to pass the
-    `CLAMS_ENV` environment variable, e.g. `CLAMS_ENV=prod lein run`.
+    `CONF_ENV` environment variable, e.g. `CONF_ENV=prod lein run`.
 
 ## License
 
