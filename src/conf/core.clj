@@ -5,14 +5,14 @@
   Basic config values will be loaded from `/resources/conf/base.edn`.
 
   Different configurations may be specified for different 'environments'.
-  The current environment is determined by the special environment variable
-  `CONF_ENV` (or the Java property `conf.env`). The value of this variable
-  determines the name of an additional edn resource to load. Values set in
-  this file will take precedence over those set in the base config. For example,
-  to run a program in a production configuration, you might run the command:
-  `CONF_ENV=prod lein run`. This would load both the base config file and
-  `/resources/conf/prod.edn`, with the latter taking precedence. Note that the
-  value of `CONF_ENV` can be an arbitrary string; you can name the
+  The current environment is determined by the special environment variable,
+  the 'env-key', `CONF_ENV` (or the Java property `conf.env`). The value of the
+  env-key determines the name of an additional edn resource to load. Values set
+  in this file will take precedence over those set in the base config. For
+  example, to run a program in a production configuration, you might run the
+  command: `CONF_ENV=prod lein run`. This would load both the base config file
+  and `/resources/conf/prod.edn`, with the latter taking precedence. Note that
+  the value of `CONF_ENV` can be an arbitrary string; you can name the
   environment-specific config resources however you like.
 
   Environment variables are also merged into the config. These take a higher
@@ -23,7 +23,10 @@
   Finally, Java system properties are also merged into the config. These take
   the highest precedence of all, and can override any other config value.
   Property names are normalized from lower.dot.case to the typical
-  lower-dash-case, just like environment variables."
+  lower-dash-case, just like environment variables.
+
+  If for some reason you don't like the default env-key, `CONF_ENV`, you're free
+  to choose your own by calling `load!` with an additional argument."
   (:refer-clojure :rename {get core-get set! core-set!})
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
@@ -81,24 +84,27 @@
         (edn/read-string (slurp resource))))))
 
 (defn- get-conf-env
-  "Parses the special CONF_ENV var from config maps. The value of
+  "Parses the value of the env-key from config maps. The value of
   this var informs which additional config files should be loaded."
-  [& cfgs]
-  (when-let [conf-env (some identity (map :conf-env cfgs))]
+  [env-key & cfgs]
+  (when-let [conf-env (some identity (map env-key cfgs))]
     (string/lower-case conf-env)))
 
 (defn load!
-  "Loads the config. Usually you won't need to call this directly as
-  the config will be automatically loaded when you attempt to access it."
-  []
-  (let [props     (read-props)
-        env       (read-env)
-        conf-env (get-conf-env props env)]
-    (reset! conf (merge (read-config-file "base")
-                        (read-config-file "default")
-                        (read-config-file conf-env)
-                        env
-                        props))))
+  "Loads the config. Unless you'd like to specify your own env-key,
+  you won't need to call this directly as the config will be
+  automatically loaded on first access."
+  ([]
+   (load! :conf-env))
+  ([env-key]
+   (let [props (read-props)
+         env (read-env)
+         conf-env (get-conf-env env-key props env)]
+     (reset! conf (merge (read-config-file "base")
+                         (read-config-file "default")
+                         (read-config-file conf-env)
+                         env
+                         props)))))
 
 (defn unload!
   "Unloads the config. This exists mainly to ease testing

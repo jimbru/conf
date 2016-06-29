@@ -101,3 +101,10 @@
   (conf/set! :port 5001)
   (is (= (conf/get :port) 5001))
   (is (= (conf/get :color) "red")))
+
+(deftest custom-env-key-test
+  (wrap-fixtures {}
+                 {"CONF_ENV" "dev"
+                  "A_b-C" "prod"}
+                 #(conf/load! :a-b-c))
+  (is (= (conf/get :database-url) "sql://fake:1234/proddb")))
