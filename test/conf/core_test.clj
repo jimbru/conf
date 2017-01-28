@@ -15,17 +15,25 @@
   "{:database-url \"sql://fake:1234/devdb\"
     }")
 
+(def mock-conf-prod-default-edn
+  "{:database-url \"sql://fake:1234/proddb_a\"
+    :log-level :trace
+    }")
+
 (def mock-conf-prod-edn
-  "{:database-url \"sql://fake:1234/proddb\"
+  "{:database-url \"sql://fake:1234/proddb_b\"
     }")
 
 (defn stub-slurp [file]
   (condp = file
-    "conf/prod.edn"    mock-conf-prod-edn
-    "conf/dev.edn"     mock-conf-dev-edn
-    "conf/default.edn" mock-conf-default-edn
-    "conf/base.edn"    mock-conf-base-edn
-    (throw (Exception. "Unknown fixture."))))
+    "conf/prod.edn"             mock-conf-prod-edn
+    "conf/defaults/prod.edn"    mock-conf-prod-default-edn
+    "conf/dev.edn"              mock-conf-dev-edn
+    "conf/default.edn"          mock-conf-default-edn
+    "conf/base.edn"             mock-conf-base-edn
+    (if (re-find #"conf/defaults/\w+\.edn" file)
+        "{}"
+        (throw (Exception. "Unknown fixture.")))))
 
 (defn wrap-fixtures [props env f]
   (with-redefs [clojure.java.io/resource    identity
@@ -59,7 +67,8 @@
     (conf/unload!))
   (testing "prod"
     (wrap-fixtures {} {"conf.env" "PrOd"} conf/load!)
-    (is (= (conf/get :database-url) "sql://fake:1234/proddb"))
+    (is (= (conf/get :database-url) "sql://fake:1234/proddb_b"))
+    (is (= (conf/get :log-level) :trace))
     (conf/unload!))
   (testing "using system property"
     (wrap-fixtures {"conf.env" "dev"} {} conf/load!)
@@ -107,4 +116,4 @@
                  {"CONF_ENV" "dev"
                   "A_b-C" "prod"}
                  #(conf/load! :a-b-c))
-  (is (= (conf/get :database-url) "sql://fake:1234/proddb")))
+  (is (= (conf/get :database-url) "sql://fake:1234/proddb_b")))
