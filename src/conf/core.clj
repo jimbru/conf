@@ -1,29 +1,43 @@
 (ns conf.core
-  "Library to read configuration values from edn resources, environment
-  variables, and Java system properties.
+  "Library to read configuration values from edn resources,
+  environment variables, and Java system properties.
 
-  Basic config values will be loaded from `/resources/conf/base.edn`.
+  Values are loaded in this order, with later values overriding
+  previous values:
 
-  Different configurations may be specified for different 'environments'.
-  The current environment is determined by the special environment variable,
-  the 'env-key', `CONF_ENV` (or the Java property `conf.env`). The value of the
-  env-key determines the name of an additional edn resource to load. Values set
-  in this file will take precedence over those set in the base config. For
-  example, to run a program in a production configuration, you might run the
-  command: `CONF_ENV=prod lein run`. This would load both the base config file
-  and `/resources/conf/prod.edn`, with the latter taking precedence. Note that
-  the value of `CONF_ENV` can be an arbitrary string; you can name the
-  environment-specific config resources however you like.
+   - `/resources/conf/base.edn`
+   - `/resources/conf/default.edn`
+   - `/resources/conf/defaults/$CURRENT.edn`
+   - `/resources/conf/$CURRENT.edn`
+   - Environment variables
+   - Java properties
 
-  Environment variables are also merged into the config. These take a higher
-  precedence and can override any file's value. Names of environment variables
-  are normalized from UPPER_UNDERSCORE_CASE strings to more Clojure-esque
-  lower-dash-case keywords.
+  The current environment is determined by the special environment
+  variable, the 'env-key', `CONF_ENV` (or the Java property
+  `conf.env`). The value of the env-key determines the name of
+  additional edn resources to load.  First
+  `/resources/conf/defaults/$CURRENT.edn`is loaded and then
+  `/resources/conf/$CURRENT.edn` is loaded (if they exist).  Values
+  set in these files will take precedence over those set in the
+  previous configs. For example, to run a program in a production
+  configuration, you might run the command: `CONF_ENV=prod lein
+  run`. This would load the base config file,
+  `/resources/conf/defaults/prod.edn`, and `/resources/conf/prod.edn`,
+  with the latter files taking precedence over the earlier ones. Note
+  that the value of `CONF_ENV` can be an arbitrary string; you can
+  name the environment-specific config resources however you like.
 
-  Finally, Java system properties are also merged into the config. These take
-  the highest precedence of all, and can override any other config value.
-  Property names are normalized from lower.dot.case to the typical
-  lower-dash-case, just like environment variables.
+  As listed above, environment variables are also merged into the
+  config. These take a higher precedence and can override any file's
+  value. Names of environment variables are normalized from
+  UPPER_UNDERSCORE_CASE strings to more Clojure-esque lower-dash-case
+  keywords.
+
+  Finally, Java system properties are also merged into the
+  config. These take the highest precedence of all, and can override
+  any other config value.  Property names are normalized from
+  lower.dot.case to the typical lower-dash-case, just like environment
+  variables.
 
   If for some reason you don't like the default env-key, `CONF_ENV`, you're free
   to choose your own by calling `load!` with an additional argument."
@@ -83,6 +97,15 @@
         {}  ; Config file not found.
         (edn/read-string (slurp resource))))))
 
+(defn- read-config-file-with-defaults
+  "Reads the respurces from the standard and default config files
+  using read-config-file.  First we read defaults/NAME.edn and then
+  merge that with NAME.edn"
+  [name]
+  (when name
+    (merge (read-config-file (str "defaults/" name))
+           (read-config-file name))))
+
 (defn- get-conf-env
   "Parses the value of the env-key from config maps. The value of
   this var informs which additional config files should be loaded."
@@ -102,7 +125,7 @@
          conf-env (get-conf-env env-key props env)]
      (reset! conf (merge (read-config-file "base")
                          (read-config-file "default")
-                         (read-config-file conf-env)
+                         (read-config-file-with-defaults conf-env)
                          env
                          props)))))
 
