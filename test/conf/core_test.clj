@@ -8,11 +8,13 @@
 
 (def mock-conf-default-edn
   "{:database-url \"sql://fake:1234/foobar\"
+    :bt-database-url #var :database-url
     :log-level :debug ; verbose!
     }")
 
 (def mock-conf-dev-edn
   "{:database-url \"sql://fake:1234/devdb\"
+    :xyz-database-url #var :bt-database-url
     }")
 
 (def mock-conf-prod-default-edn
@@ -78,9 +80,10 @@
 (deftest get-from-env-test
   (wrap-fixtures {} {"DATABASE_URL" "sql://dev.fake:1234/foobar"} conf/load!)
   (is (= (conf/get :database-url) "sql://dev.fake:1234/foobar"))
-  (is (= (conf/get-all) {:database-url "sql://dev.fake:1234/foobar"
-                         :log-level    :debug
-                         :port         5000})))
+  (is (= (dissoc (conf/get-all) :bt-database-url)
+         {:database-url "sql://dev.fake:1234/foobar"
+          :log-level    :debug
+          :port         5000})))
 
 (deftest get-from-props-test
   (wrap-fixtures {"database.url" "sql://props:1234"}
@@ -95,7 +98,7 @@
 
 (deftest get-all-test
   (wrap-fixtures {"foo" "bar"} {"baz" "quux"} conf/load!)
-  (is (= (conf/get-all)
+  (is (= (dissoc (conf/get-all) :bt-database-url :xyz-database-url)
          {:database-url "sql://fake:1234/foobar"
           :log-level    :debug
           :port         5000
@@ -117,3 +120,9 @@
                   "A_b-C" "prod"}
                  #(conf/load! :a-b-c))
   (is (= (conf/get :database-url) "sql://fake:1234/proddb_b")))
+
+(deftest get-var-test
+  (wrap-fixtures {} {"CONF_ENV" "dev"} conf/load!)
+  (is (= (conf/get :database-url)     "sql://fake:1234/devdb"))
+  (is (= (conf/get :bt-database-url)  "sql://fake:1234/devdb"))
+  (is (= (conf/get :xyz-database-url) "sql://fake:1234/devdb")))

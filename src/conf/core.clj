@@ -46,6 +46,8 @@
             [clojure.java.io :as io]
             [clojure.string :as string]))
 
+(declare get)
+
 (def ^:private conf (atom nil))
 
 (defn- normalize-var-name
@@ -94,8 +96,11 @@
   (when name
     (let [resource (io/resource (format "conf/%s.edn" name))]
       (if (nil? resource)
-        {}  ; Config file not found.
-        (edn/read-string (slurp resource))))))
+          {}  ; Config file not found.
+          (edn/read-string {:readers {'var (fn [var]
+                                             (fn [not-found]
+                                               (get var not-found)))}}
+                           (slurp resource))))))
 
 (defn- read-config-file-with-defaults
   "Reads the respurces from the standard and default config files
@@ -153,7 +158,10 @@
   ([k]
    (get k nil))
   ([k not-found]
-   (core-get (get-all) k not-found)))
+   (let [v (core-get (get-all) k not-found)]
+     (if (fn? v)
+         (v not-found)
+         v))))
 
 (defn set!
   "Sets the config value for the given key. This is useful when

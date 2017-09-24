@@ -33,7 +33,19 @@ Add the following dependency to your `project.clj` file:
     {:port 80}
     ```
 
-3. Add code in your app to use your config values.
+3. (Optional) Add late binding variables.
+
+    Configuration variables can refer to other configuration variables
+    using the `#var` syntax:
+
+    ```edn
+    {
+      :database-url "sql://fake:1234/devdb"
+      :bt-database-url #var :database-url
+    }
+    ```
+
+4. Add code in your app to use your config values.
 
     For example:
     ```clojure
@@ -46,7 +58,7 @@ Add the following dependency to your `project.clj` file:
       (start-server {:port (conf/get :port)}))
     ```
 
-4. Run your app.
+5. Run your app.
 
     To use just the base config, run your app normally, e.g. `lein run`. If
     you'd like to enable an environment-specific config, be sure to pass the
