@@ -63,11 +63,22 @@
         (string/replace "." "-")
         keyword)))
 
+(defn- normalize-var-value
+  "Parses an environment variable into a Clojure type."
+  [v]
+  (try
+    (let [vparsed (edn/read-string v)]
+      (if (symbol? vparsed)
+        v
+        vparsed))
+    (catch Exception _
+      v)))
+
 (defn- normalize-var-map
   "Normalizes a config var map."
   [vmap]
   (into {} (for [[k v] vmap]
-             [(normalize-var-name k) v])))
+             [(normalize-var-name k) (normalize-var-value v)])))
 
 (defn- sys-getenv
   "Wrapper around System/getenv. Makes it easier to mock in tests."
