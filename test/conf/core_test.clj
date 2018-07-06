@@ -91,6 +91,17 @@
                  conf/load!)
   (is (= (conf/get :database-url) "sql://props:1234")))
 
+(deftest get-parsed-test
+  (wrap-fixtures {"foo" "abcdef"}
+                 {"bar" "123"
+                  "baz" ":blah"
+                  "quux" "[:a \"b\" c]"}
+                 conf/load!)
+  (is (= "abcdef" (conf/get :foo)))
+  (is (= 123 (conf/get :bar)))
+  (is (= :blah (conf/get :baz)))
+  (is (= [:a "b" 'c] (conf/get :quux))))
+
 (deftest get-not-found-arg-test
   (wrap-fixtures {} {} conf/load!)
   (is (= (conf/get :xxx) nil))
