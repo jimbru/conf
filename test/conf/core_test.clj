@@ -137,3 +137,13 @@
   (is (= (conf/get :database-url)     "sql://fake:1234/devdb"))
   (is (= (conf/get :bt-database-url)  "sql://fake:1234/devdb"))
   (is (= (conf/get :xyz-database-url) "sql://fake:1234/devdb")))
+
+(deftest with-conf-test
+  (conf/with-conf {:foo "abc"}
+    (is (= "abc" (conf/get :foo)))))
+
+(deftest with-overrides-test
+  (conf/with-conf {:foo "abc"}
+    (conf/with-overrides {:bar "123"}
+      (is (= "abc" (conf/get :foo)))
+      (is (= "123" (conf/get :bar))))))

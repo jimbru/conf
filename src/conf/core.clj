@@ -48,7 +48,7 @@
 
 (declare get)
 
-(def ^:private conf (atom nil))
+(def ^:private ^:dynamic conf (atom nil))
 
 (defn- normalize-var-name
   "Environment variables are often written in UPPER_UNDERSCORE_CASE. Likewise,
@@ -181,3 +181,15 @@
   (when-not (loaded?)
     (load!))
   (swap! conf assoc k val))
+
+(defmacro with-conf
+  "Evaluates `body`, with the current config replaced by `m` (thread-locally)."
+  [m & body]
+  `(binding [conf (atom ~m)]
+     ~@body))
+
+(defmacro with-overrides
+  "Evaluates `body`, with the current config merged with `m` (thread-locally)."
+  [m & body]
+  `(with-conf (merge @@#'conf ~m)
+     ~@body))
