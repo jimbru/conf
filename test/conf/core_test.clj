@@ -149,3 +149,8 @@
   (conf/with-overrides {:bar "123"}
     (is (= "abc" (conf/get :foo)))
     (is (= "123" (conf/get :bar)))))
+
+(deftest get-required-test
+  (wrap-fixtures {} {"foo" "abc"} conf/load!)
+  (is (= "abc" (conf/get-required :foo)))
+  (is (thrown? Exception (conf/get-required :bar))))
