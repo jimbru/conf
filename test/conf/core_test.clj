@@ -139,11 +139,13 @@
   (is (= (conf/get :xyz-database-url) "sql://fake:1234/devdb")))
 
 (deftest with-conf-test
-  (conf/with-conf {:foo "abc"}
-    (is (= "abc" (conf/get :foo)))))
+  (wrap-fixtures {"foo" "abc"} {} conf/load!)
+  (conf/with-conf {:bar "123"}
+    (is (nil? (conf/get :foo)))
+    (is (= "123" (conf/get :bar)))))
 
 (deftest with-overrides-test
-  (conf/with-conf {:foo "abc"}
-    (conf/with-overrides {:bar "123"}
-      (is (= "abc" (conf/get :foo)))
-      (is (= "123" (conf/get :bar))))))
+  (wrap-fixtures {"foo" "abc"} {} conf/load!)
+  (conf/with-overrides {:bar "123"}
+    (is (= "abc" (conf/get :foo)))
+    (is (= "123" (conf/get :bar)))))
