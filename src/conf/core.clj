@@ -176,8 +176,10 @@
 
 (defn get-required
   [k]
-  (or (get k)
-      (throw (ex-info "Missing required conf key" {::key k}))))
+  (let [v (get k)]
+    (if (some? v)
+      v
+      (throw (ex-info "Missing required conf key" {::key k})))))
 
 (defn set!
   "Sets the config value for the given key. This is useful when

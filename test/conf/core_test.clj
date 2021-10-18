@@ -153,4 +153,6 @@
 (deftest get-required-test
   (wrap-fixtures {} {"foo" "abc"} conf/load!)
   (is (= "abc" (conf/get-required :foo)))
-  (is (thrown? Exception (conf/get-required :bar))))
+  (is (thrown? Exception (conf/get-required :bar)))
+  (conf/with-overrides {:baz false}
+    (is (false? (conf/get-required :baz)))))
